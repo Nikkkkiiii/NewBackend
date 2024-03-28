@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-o9t^_xdf(h8hg&(&@9nkp9p)&=#ft(*_o*)le+90qrwr5sv%ov
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -38,6 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'User',
+    'map',
+    'chatbot',
+    'notification',
+    'EmergencyButton',
+    'channel.apps.ChannelConfig',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
 ]
 
 MIDDLEWARE = [
@@ -76,8 +83,13 @@ WSGI_APPLICATION = 'Femmecare.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'femmecare',
+        'USER':'femmecare',
+        'PASSWORD': 'femmecare',
+        'HOST': 'localhost',
+        'PORT': ''
+
     }
 }
 
@@ -130,3 +142,11 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 
 ]
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'nikitaban24@gmail.com'
+EMAIL_HOST_PASSWORD = 'xwqd ejit agls vgpk'
+

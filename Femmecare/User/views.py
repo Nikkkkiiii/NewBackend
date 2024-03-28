@@ -1,4 +1,5 @@
-from datetime import datetime
+# from datetime import datetime
+import random
 from django.shortcuts import render
 import pyotp
 from rest_framework.views import APIView
@@ -7,20 +8,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import update_last_login
 from rest_framework.response import Response
 from .serializer import RegisterSerializer
-from .utils import send_otp
+from .utils import send_otp, sendEmail
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import authenticate
-
+from django.contrib.auth import authenticate 
 
 # Create your views here.
 class LoginView(APIView):
 
     def post(self, request):
-        username = request.data['username']
+        phone_number = request.data['username']
         password = request.data['password']
 
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, username=phone_number, password=password)
 
         if user is not None:
             refresh = RefreshToken.for_user(User)
@@ -38,6 +38,7 @@ class LoginView(APIView):
 class RegisterView(APIView):
 
     def post(self, request):
+        print(request.data)
         serializer = RegisterSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -47,39 +48,43 @@ class RegisterView(APIView):
             user.set_password(serializer.validated_data['password'])
             user.save()
 
-            otp = send_otp(request)
+            # otp, otp_key = send_otp(request)
+            # message = f" Your otp for registration continuation is {otp}."
+            # subject = "OTP code verification"
+            # email = serializer.validated_data['email']
+            # sendEmail(request, [email], message, subject)
+            # print (otp)
             
-            request.session['username'] = user.username
-            return Response({'verification_code': 'Enter verification code for successful registeration.'})
+            
+            # return Response({'success': 'Enter verification code for successful registeration.', 'otp_key': otp_key, 'email': email })
+            return Response({'success': 'Enter verification code for successful registeration.'})
+        
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        
 class OTPView(APIView):
     def post(self, request):
         otp = request.data['entered_otp']
-        username = request.session['username']
 
-        otp_key = request.session['otp_secret_key']
-        otp_valid_until = request.session['otp_valid_date']
+        print(otp)
+        send_Email =  request.data['email']
+        otp_key = request.session['otp_key']
+        # otp_valid_until = request.session['otp_valid_date']
 
 
-        if otp_key is not None and otp_valid_until is not None:
+        if otp_key is not None:
+            totp = pyotp.TOTP(otp_key, interval= 600)
+            if totp.verify(otp):
+                # print("inside verification")
+                user = User.objects.get(email= send_Email)
+                user.is_active = True
+                user.save()
+                return Response({"success": "successful registration"})
+            else:
+                return Response({"error": "Wrong OTP or time out."})
 
-            valid_until = datetime.fromisoformat(otp_valid_until)
-            
-            print(valid_until)
-            print(datetime.now())
-            if valid_until > datetime.now():
-                # print("inside datetime")
-                totp = pyotp.TOTP(otp_key, interval= 60)
-                if totp.verify(otp):
-                    # print("inside verification")
-                    user = User.objects.get(username= username)
-                    user.is_active = True
-                    user.save()
-                    return Response({"success": "successful registration"})
                 
-        return Response({"nothing"})
+        return Response({"error": "Sorry, something went wrong."})
 
 
 
@@ -89,3 +94,5 @@ class TokenView(APIView):
     # @login_required
     def get(self, request):
         return Response({'hii': 'good job'})
+    
+    
