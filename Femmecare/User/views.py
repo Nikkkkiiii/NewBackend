@@ -7,30 +7,43 @@ from User.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import update_last_login
 from rest_framework.response import Response
-from .serializer import RegisterSerializer
+from .serializer import RegisterSerializer, UserSerializer
 from .utils import send_otp, sendEmail
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate 
 
 # Create your views here.
+
+def user_image_path(instance, filename):
+    phone_no = instance.phone_number
+    filename = str(filename).split('.')[-1]
+    return f'user_images/{phone_no}.{filename}'
+
 class LoginView(APIView):
 
     def post(self, request):
-        phone_number = request.data['username']
-        password = request.data['password']
+        # phone_number = request.data['email']
+        # password = request.data['password']
+        # print(phone_number,password)
+        try:
+            phone_number = request.data['email']
+            password = request.data['password']
+        except KeyError as e:
+            return Response({'error': 'Required field missing in request data'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(request, username=phone_number, password=password)
 
         if user is not None:
-            refresh = RefreshToken.for_user(User)
+            # print(user.id)
+            refresh = RefreshToken.for_user(user)
 
             response_data = {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token)
             }
             update_last_login(user, user)
-            return Response({'token': response_data}, status=status.HTTP_200_OK)
+            return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
         
@@ -39,7 +52,21 @@ class RegisterView(APIView):
 
     def post(self, request):
         print(request.data)
+        username = request.data['username']
+        email = request.data['email']
+        phone_number = request.data['phone_number']
+        password = request.data['password']
+        address = request.data['address']
+
+        print(username, email, phone_number, password, address)
+
+
+
         serializer = RegisterSerializer(data=request.data)
+        user = User.objects.create(username=username, email= email, phone_number=phone_number,address=address,is_active=False)
+
+        user.set_password(password)
+        user.save()
 
         if serializer.is_valid():
             user = serializer.save()
@@ -48,19 +75,19 @@ class RegisterView(APIView):
             user.set_password(serializer.validated_data['password'])
             user.save()
 
-            # otp, otp_key = send_otp(request)
-            # message = f" Your otp for registration continuation is {otp}."
-            # subject = "OTP code verification"
-            # email = serializer.validated_data['email']
-            # sendEmail(request, [email], message, subject)
-            # print (otp)
+            otp, otp_key = send_otp(request)
+            message = f" Your otp for registration continuation is {otp}."
+            subject = "OTP code verification"
+            email = serializer.validated_data['email']
+            sendEmail(request, [email], message, subject)
+            print (otp)
             
             
-            # return Response({'success': 'Enter verification code for successful registeration.', 'otp_key': otp_key, 'email': email })
-            return Response({'success': 'Enter verification code for successful registeration.'})
+        #     # return Response({'success': 'Enter verification code for successful registeration.', 'otp_key': otp_key, 'email': email })
+        return Response({'success': 'Enter verification code for successful registeration.'})
         
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # else:
+        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class OTPView(APIView):
     def post(self, request):
@@ -95,4 +122,61 @@ class TokenView(APIView):
     def get(self, request):
         return Response({'hii': 'good job'})
     
+
+class SaveProfileView(APIView):
+    def Post(self, request):
+        signedUser = request.user
+        user_id = request.data.get('user')
+        viewProfileDetails = []
+
+        if signedUser.is_authenticated:
+            try:
+                user_details = User.objects.get(id=user_id)
+
+                profile_data = {
+                    "user_id": user_details.id,
+                    "user_fullname": f"{user_details.first_name} {user_details.last_name}",
+                    "user_name": user_details.username,
+                    "user_location": user_details.address,
+                    "user_contact": user_details.phone_number,
+                    "user_email": user_details.email,
+                    "user_image": user_details.profileImage.url if user_details.profileImage else None,  
+                    "user_type": user_details.user_type,
+                }
+                viewProfileDetails.append(profile_data)
+
+            except User.DoesNotExist:
+                return Response({'error': 'User not found'}, status=404)
+            
+            serialized_view_profile_data = UserSerializer(viewProfileDetails, many=True).data
+
+            return Response(serialized_view_profile_data)
+        else:
+            return Response({'error': 'user not authenticated'}, status=401)
+                
+
     
+class updateProfileView(APIView):
+    def post(self, request):
+        signedUser = request.user
+        name = request.data['name']
+        email = request.data['email']
+        print(request)
+
+        print(signedUser)
+
+        if signedUser.is_authenticated:
+            try:
+
+                signedUser.name = name
+                signedUser.email = email
+                signedUser.save()
+                pass
+            except User.DoesNotExist:
+                return Response({'error': 'User not found'}, status=404)
+
+        
+
+            return Response({"success": "Successfully updated"}, status= status.HTTP_200_OK)
+        else:
+            return Response({'error': 'User not authenticated'}, status=401)

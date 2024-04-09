@@ -14,6 +14,9 @@ class User(AbstractUser, PermissionsMixin):
     username = models.CharField( null=True,blank=True,max_length=50, unique=True)
     profileImage = models.ImageField(upload_to=None, height_field=None, width_field=None, max_length=100)
 
+    def __str__(self):
+        return f"{self.email}"
+
 
     # User types
     USER_TYPES = (
