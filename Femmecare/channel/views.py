@@ -4,50 +4,86 @@ from rest_framework.response import Response
 from User.models import User
 from channel.models import Article
 from channel.serializer import ArticleSerializer
+from rest_framework import status
+
 
 class ArticleView(APIView):
     def get(self, request):
-        User = request.User
-        if User.is_authenticated:
-            article = article.objects.filter(is_verified = True)
+        user = request.user
+        if user.is_authenticated:
+            article = Article.objects.filter()
             article_data = []
 
             for each_article in article:
-                User = User.objects.get(email = each_article.author )
+                user = User.objects.get(email = each_article.author )
                 article_data.append({"article_id": each_article.id,
                                     "article_title": each_article.article_title,
                                     "article_content": each_article.article_content,
-                                    "article_image": f"media/{each_article.article_image}",
+                                    "Image": f"media/{each_article.Image}",
                                     "article_date": each_article.post_date,
-                                    "user_name": f"{User.first_name} {User.last_name}",
-                                    "user_id": User.id
+                                    "user_name": user.username,
+                                    "user_id": user.id
                                     })
                 
-            serialized_article_data = ArticleSerializer(each_article, many= True).data
+            serialized_article_data = ArticleSerializer(article_data, many= True).data
                 
             return Response(serialized_article_data)    
 
-
+class PostArticleView(APIView):
     def post(self, request):
-        try:
-            user_id = request.data['author']
-            article_title = request.data['article_title']
-            article_content = request.data['article_content']
-            article_image = request.FILES['article_image']
+        user = request.user
+        print(request.user)
+        print(request.data)
+        if user.is_authenticated:
+            try:
+                article_title = request.data['article_heading']
+                article_content = request.data['article_description']
+                Image = request.FILES['Image']
+                author = user.id
+            except User.DoesNotExist:
+                print("me here")
+                return Response({"error": "User does not exist"}, status=400)
+            except KeyError as e:
+                print("me heghre")
+                return Response({"error": f"Missing required field: {str(e)}"}, status=400)
+    
+            article = Article.objects.create(
+                author=user,
+                Image=Image,
+                article_title=article_title,
+                article_content=article_content,
+            )
+            
+            return Response({"success": "Successfully posted article."})
+    
 
-            author = User.objects.get(id=user_id)
+    def put(self, request):
+        user = request.user
+        if user.is_authenticated:
+            try:
+                article_id =request.data["article_id"]
+                article = Article.objects.get(id=article_id)
+                article_title = request.data.get('article_heading')
+                article.Image = request.data.get('Image')
+                article_Content = request.data.get('article_description')
+                article.article_title = article_title
+                article.article_content = article_Content
+                article.save()
+            except Article.DoesNotExist:
+                return Response({"error": "Article not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+        return Response({"Success": "Successfully updated"}, status=200)
+
+    def delete(self, request):
+        user = request.user
+        if user.is_authenticated:
+            try:
+                article_id = request.data["article_id"]
+                article = Article.objects.get(id=article_id)
+                article.delete()
+                return Response({"success": "Article deleted successfully"}, status=200)
+            except Article.DoesNotExist:
+                return Response({"error": "Article not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-        except User.DoesNotExist:
-            return Response({"error": "User does not exist"}, status=400)
-        except KeyError as e:
-            return Response({"error": f"Missing required field: {str(e)}"}, status=400)
-
-        article = Article.objects.create(
-            author=author,
-            article_image=article_image,
-            article_title=article_title,
-            article_content=article_content,
-        )
-        
-        return Response({"success": "Successfully posted news"})
+            

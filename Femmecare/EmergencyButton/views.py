@@ -13,3 +13,5 @@ class EmergencyButtonView(APIView):
         EmergencyButton.objects.create(message=message)
         
         return Response({'message': 'Emergency message saved successfully.'}, status=status.HTTP_201_CREATED)
+    
+    

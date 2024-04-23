@@ -40,8 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'User',
+    'corsheaders',
     'map',
-    'chatbot',
+    'chat.apps.ChatConfig',
     'notification',
     'EmergencyButton',
     'channel.apps.ChannelConfig',
@@ -49,11 +50,19 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_totp',
 ]
 
+CORS_ORIGIN_ALLOW_ALL =True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  # Add the origin of your frontend here
+    'http://127.0.0.1:3000', 
+    'http://192.168.1.84:60097'
+      # Another example
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -146,12 +155,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-# JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
-# JWT_ALGORITHM = 'HS256'
-# JWT_ALLOW_REFRESH = True
-# JWT_EXPIRATION_DELTA = timedelta(minutes=5)
-# JWT_REFRESH_TOKEN_EXPIRATION_DELTA = timedelta(days=7)
-
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=20),
@@ -190,3 +193,13 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'nikitaban24@gmail.com'
 EMAIL_HOST_PASSWORD = 'xwqd ejit agls vgpk'
 
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_DOMAIN = None
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}

@@ -1,4 +1,3 @@
-# from datetime import datetime
 import random
 from django.shortcuts import render
 import pyotp
@@ -125,11 +124,11 @@ class TokenView(APIView):
 
 class SaveProfileView(APIView):
     def Post(self, request):
-        signedUser = request.user
+        user = request.user
         user_id = request.data.get('user')
         viewProfileDetails = []
 
-        if signedUser.is_authenticated:
+        if user.is_authenticated:
             try:
                 user_details = User.objects.get(id=user_id)
 
@@ -140,6 +139,7 @@ class SaveProfileView(APIView):
                     "user_location": user_details.address,
                     "user_contact": user_details.phone_number,
                     "user_email": user_details.email,
+                    # Assuming image is a FileField or ImageField
                     "user_image": user_details.profileImage.url if user_details.profileImage else None,  
                     "user_type": user_details.user_type,
                 }
@@ -157,26 +157,55 @@ class SaveProfileView(APIView):
 
     
 class updateProfileView(APIView):
+
     def post(self, request):
-        signedUser = request.user
+        user = request.user
         name = request.data['name']
         email = request.data['email']
-        print(request)
+        # print(request)
 
-        print(signedUser)
+        # print(user)
+        print(request.POST)
 
-        if signedUser.is_authenticated:
+        # if user.is_authenticated:
+        #     try:
+        #         if user.user_type == "business":
+        #             business = Business.objects.get(user=user)
+        #             for key, value in request.POST.items():
+        #                 if key in ['name', 'description']:
+        #                     setattr(business, key, value)
+        #             business.save()
+                
+        #         if 'image' in request.FILES:
+        #                 print("Image")
+        #                 user.image=request.FILES['image']
+                        
+        #         for key, value in request.POST.items():
+        #             print(key,value)
+        #             if hasattr(user, key):
+        #                 setattr(user, key, value)
+        #         user.save()
+        #         return Response({'data': "success"})
+        #     except Business.DoesNotExist:
+        #         return Response({"error": "Does not found any business"})
+        # else:
+        #     return Response({"error": "User is not authenticated"}) 
+
+        if user.is_authenticated:
             try:
+                if 'profileImage' in request.FILES:
+                    print("profileImage")
+                    user.profileImage=request.FILES['profileImage']
 
-                signedUser.name = name
-                signedUser.email = email
-                signedUser.save()
-                pass
+                user.name = name
+                user.email = email
+                user.save()
+                return Response({'data': "success"})
             except User.DoesNotExist:
                 return Response({'error': 'User not found'}, status=404)
 
         
 
-            return Response({"success": "Successfully updated"}, status= status.HTTP_200_OK)
+            # return Response({"success": "Successfully updated"}, status= status.HTTP_200_OK)
         else:
             return Response({'error': 'User not authenticated'}, status=401)
