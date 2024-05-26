@@ -50,12 +50,13 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_totp',
 ]
 
-CORS_ORIGIN_ALLOW_ALL =True
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL =False
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',  # Add the origin of your frontend here
     'http://127.0.0.1:3000', 
-    'http://192.168.1.80:60097'
+    'http://192.168.1.71:60097',
+    'http://localhost:5173'
       # Another example
 ]
 
@@ -66,6 +67,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'Femmecare.urls'

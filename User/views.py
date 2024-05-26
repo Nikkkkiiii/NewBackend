@@ -46,6 +46,11 @@ class LoginView(APIView):
             }, status=200)
         else:
             return Response({'status': 401, 'message': 'Authentication failed'}, status=401)
+        
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     class LogoutView(APIView):
         def post(self, request):
@@ -103,6 +108,12 @@ class RegisterView(APIView):
         
         # else:
         #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        # Retrieve all users
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
         
 class OTPView(APIView):
     def post(self, request):

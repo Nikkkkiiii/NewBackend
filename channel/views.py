@@ -5,9 +5,12 @@ from User.models import User
 from channel.models import Article
 from channel.serializer import ArticleSerializer
 from rest_framework import status
-
+from rest_framework.permissions import IsAuthenticated
 
 class ArticleView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         user = request.user
         if user.is_authenticated:
@@ -40,9 +43,9 @@ class PostArticleView(APIView):
                 article_content = request.data['article_description']
                 # Image = request.FILES['Image']
                 author = user.id
-            except User.DoesNotExist:
-                print("me here")
-                return Response({"error": "User does not exist"}, status=400)
+            # except User.DoesNotExist:
+            #     print("me here")
+            #     return Response({"error": "User does not exist"}, status=400)
             except KeyError as e:
                 print("me heghre")
                 return Response({"error": f"Missing required field: {str(e)}"}, status=400)
