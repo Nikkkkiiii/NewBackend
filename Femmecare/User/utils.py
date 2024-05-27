@@ -8,6 +8,17 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core.mail import send_mail
 
+from  .models import User
+def authenticate(request, username=None, password=None):
+        print(username, password)
+        try:
+            user = User.objects.get(email=username)
+            if user.check_password(password):
+                return user
+
+            return None
+        except (User.DoesNotExist, User.MultipleObjectsReturned):
+            return None
 def send_otp( request):
     totp= pyotp.TOTP(pyotp.random_base32(), interval= 600)
     otp = totp.now()

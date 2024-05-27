@@ -7,10 +7,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import update_last_login
 from rest_framework.response import Response
 from .serializer import RegisterSerializer, UserSerializer
-from .utils import send_otp, sendEmail
+from .utils import send_otp, sendEmail,authenticate
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import authenticate 
+# from django.contrib.auth import authenticate 
+
+
+
 
 # Create your views here.
 
