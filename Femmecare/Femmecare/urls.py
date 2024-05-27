@@ -9,6 +9,7 @@ urlpatterns = [
     path('channel/', include('channel.urls')),
     path('chat/', include('chat.urls')),
     path('map/', include('map.urls')),
+    path('emergencybtn/',include('EmergencyButton.urls'))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) #new
